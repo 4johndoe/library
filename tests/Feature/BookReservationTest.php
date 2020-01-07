@@ -2,20 +2,72 @@
 
 namespace Tests\Feature;
 
+use App\Book;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class ExampleTest extends TestCase
+class BookReservationTest extends TestCase
 {
-    /**
-     * A basic test example.
-     *
-     * @return void
-     */
-    public function testBasicTest()
-    {
-        $response = $this->get('/');
+    use RefreshDatabase;
 
-        $response->assertStatus(200);
+    /** @test */
+    public function a_book_can_be_added_to_the_library()
+    {
+        $this->withoutExceptionHandling();
+
+        $response = $this->post('/books', [
+            'title' => 'Cool Book Title',
+            'author' => 'Victor',
+        ]);
+
+        $response->assertOk();
+        $this->assertCount(1, Book::all());
+    }
+
+    /** @test */
+    public function a_title_is_required()
+    {
+//        $this->withoutExceptionHandling();
+
+        $response = $this->post('/books', [
+            'title' => '',
+            'author' => 'Victor',
+        ]);
+
+        $response->assertSessionHasErrors();
+    }
+
+    /** @test */
+    public function a_author_is_required()
+    {
+//        $this->withoutExceptionHandling();
+
+        $response = $this->post('/books', [
+            'title' => 'Cool Book Title',
+            'author' => '',
+        ]);
+
+        $response->assertSessionHasErrors();
+    }
+
+    /** @test */
+    public function a_book_can_be_updated()
+    {
+        $this->withoutExceptionHandling();
+
+        $this->post('/books', [
+            'title' => 'Cool Book Title',
+            'author' => 'Victor',
+        ]);
+
+        $book = Book::first();
+
+        $response = $this->patch('/books/' . $book->id, [
+            'title' => 'My Title',
+            'author' => 'New Author',
+        ]);
+
+        $this->assertEquals('My Title', Book::first()->title);
+        $this->assertEquals('New Author', Book::first()->author);
     }
 }
